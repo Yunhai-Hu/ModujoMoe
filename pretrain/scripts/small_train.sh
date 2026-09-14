@@ -2,13 +2,19 @@
 set -euo pipefail
 
 ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
-MODEL_DIR=${MODUJO_BASE_MODEL:-Alexhu1999/Modujo-9B-A1B}
+MODEL_DIR=${MODUJO_SMALL_MODEL:-/workspace/models/modujo-723m}
 DATA_DIR=${MODUJO_DATA_DIR:-/workspace/datasets/modujo}
 OUTPUT_ROOT=${MODUJO_OUTPUT_DIR:-/workspace/output}
 export USE_HF=1
 unset LMDEPLOY_USE_MODELSCOPE VLLM_USE_MODELSCOPE MODELSCOPE_CACHE
 export PYTORCH_CUDA_ALLOC_CONF=${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:True}
 export WANDB_PROJECT=${WANDB_PROJECT:-modujo-pretrain}
+
+if [[ ! -f "$MODEL_DIR/config.json" ]]; then
+  echo "Small model not found at $MODEL_DIR" >&2
+  echo "Run: python pretrain/scripts/prepare_small_model.py --output $MODEL_DIR" >&2
+  exit 1
+fi
 
 CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0} swift pt \
   --model "$MODEL_DIR" \
@@ -22,9 +28,10 @@ CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0} swift pt \
   --tf32 true \
   --max_length 2048 \
   --packing false \
-  --per_device_train_batch_size 2 \
-  --gradient_accumulation_steps 4 \
-  --gradient_checkpointing true \
+  --per_device_train_batch_size 8 \
+  --gradient_accumulation_steps 2 \
+  --gradient_checkpointing false \
+  --num_train_epochs 3 \
   --learning_rate 3e-4 \
   --lr_scheduler_type cosine_with_min_lr \
   --lr_scheduler_kwargs '{"min_lr_rate": 0.1}' \
@@ -41,5 +48,5 @@ CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0} swift pt \
   --logging_steps 1 \
   --report_to wandb \
   --dataset_num_proc 8 \
-  --output_dir "$OUTPUT_ROOT/modujo-pretrain" \
+  --output_dir "$OUTPUT_ROOT/modujo-723m-pretrain" \
   "$@"

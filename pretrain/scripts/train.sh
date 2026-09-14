@@ -10,6 +10,7 @@ CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0} swift pt \
   --model "$MODEL_DIR" \
   --model_type modujo_qwen4_exp \
   --external_plugins "$ROOT_DIR/common/modujo_swift_plugin.py" \
+  --experts_impl grouped_mm \
   --dataset "$DATA_DIR/train_bilingual_packed_2048.jsonl" \
   --tuner_type full \
   --torch_dtype bfloat16 \

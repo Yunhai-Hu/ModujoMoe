@@ -5,6 +5,7 @@ ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 MODEL_DIR=${MODUJO_BASE_MODEL:-Alexhu1999/Modujo-9B-A1B}
 DATA_DIR=${MODUJO_DATA_DIR:-/workspace/datasets/modujo}
 OUTPUT_ROOT=${MODUJO_OUTPUT_DIR:-/workspace/output}
+export PYTORCH_CUDA_ALLOC_CONF=${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:True}
 
 CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0} swift pt \
   --model "$MODEL_DIR" \

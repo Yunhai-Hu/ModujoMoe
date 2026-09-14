@@ -5,6 +5,9 @@ ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 MODEL_DIR=${MODUJO_BASE_MODEL:-Alexhu1999/Modujo-9B-A1B}
 DATA_DIR=${MODUJO_DATA_DIR:-/workspace/datasets/modujo}
 OUTPUT_ROOT=${MODUJO_OUTPUT_DIR:-/workspace/output}
+export USE_HF=1
+unset LMDEPLOY_USE_MODELSCOPE VLLM_USE_MODELSCOPE MODELSCOPE_CACHE
+export WANDB_PROJECT=${WANDB_PROJECT:-modujo-pretrain}
 
 CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0} swift pt \
   --model "$MODEL_DIR" \
@@ -25,5 +28,5 @@ CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0} swift pt \
   --max_steps 2 \
   --save_strategy no \
   --logging_steps 1 \
-  --report_to none \
+  --report_to wandb \
   --output_dir "$OUTPUT_ROOT/modujo-smoke"

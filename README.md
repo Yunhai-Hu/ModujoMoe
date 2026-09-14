@@ -18,6 +18,10 @@ The initial bilingual mixture uses FineWeb-Edu (`sample-10BT`, English,
 ODC-By-1.0) and FineWeb 2 (`cmn_Hani`, Chinese, ODC-By-1.0). The checkpoint is
 randomly initialized, so training must use `swift pt --tuner_type full`.
 
+Run `python prepare_smoke_data.py`, then `bash smoke_train.sh` for the two-step
+forward/backward validation. A long run should only be launched after recording
+the observed tokens/second and peak VRAM from this validation.
+
 ## Usage
 
 ```bash
@@ -29,5 +33,8 @@ python pack_documents.py
 bash train.sh
 ```
 
-The configured effective batch is 64 sequences (about 131k tokens per optimizer
-update at 2048 tokens) and the run saves every 10 optimizer steps.
+The tuned single-GPU configuration uses micro-batch 2 without gradient
+checkpointing and accumulates 64 micro-batches. Its effective batch is 128
+sequences (about 262k tokens per optimizer update at 2048 tokens). Micro-batch 2
+peaked at 72.78 GiB on a 96 GB RTX PRO 6000; micro-batch 3 exceeded 90 GiB and
+ran out of memory. The run saves every 10 optimizer steps.

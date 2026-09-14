@@ -37,4 +37,5 @@ bash pretrain/scripts/train.sh
 On one 96 GB RTX PRO 6000, the tuned recipe uses micro-batch 2, gradient
 accumulation 64, BF16, and no gradient checkpointing. Micro-batch 2 peaks at
 93.41 GiB with fused `grouped_mm` experts; micro-batch 3 runs out of memory.
-Grouped experts raise measured GPU utilization from about 27% to 98%.
+Grouped experts cut the measured micro-step time from about 27 to 12.76 seconds;
+continuous SM utilization is still limited by the single-GPU kernel path.

@@ -1,40 +1,40 @@
 # ModujoMoe
 
-Pretraining recipes for the randomly initialized, text-only Modujo
-`Qwen4ExpForCausalLM` checkpoint using ModelScope ms-swift.
+An end-to-end training workspace for the Modujo 9B-A1B MoE language model,
+built around ModelScope ms-swift.
 
-## Files
+## Training stages
 
-- `modujo_swift_plugin.py`: registers the text-only Qwen4-Exp architecture.
-- `prepare_smoke_data.py` / `smoke_train.sh`: two-step compatibility check.
-- `prepare_train_data.py`: streams the reproducible bilingual source tranche.
-- `pack_documents.py`: creates near-full 2048-token samples offline.
-- `train.sh`: full-parameter MoE pretraining command.
-- `sources.json`: pinned dataset revisions and source shard metadata.
+| Stage | Directory | Status | Input | Output |
+| --- | --- | --- | --- | --- |
+| 1 | [`pretrain/`](pretrain/) | Active | Raw bilingual text | Base model |
+| 2 | [`sft/`](sft/) | Planned | Instruction conversations | Assistant model |
+| 3 | [`rl/`](rl/) | Planned | Prompts, rewards and rollouts | Aligned policy |
+| 4 | [`opd/`](opd/) | Planned | To be defined | Final model |
 
-Generated datasets, logs, caches, and checkpoints stay outside this repository.
+Shared ms-swift model registration lives in [`common/`](common/). Each stage
+owns its data preparation, configuration, scripts, documentation, evaluation,
+and output conventions. Generated datasets, logs, caches, and checkpoints are
+excluded from Git.
 
-The initial bilingual mixture uses FineWeb-Edu (`sample-10BT`, English,
-ODC-By-1.0) and FineWeb 2 (`cmn_Hani`, Chinese, ODC-By-1.0). The checkpoint is
-randomly initialized, so training must use `swift pt --tuner_type full`.
+## Current stage: pretraining
 
-Run `python prepare_smoke_data.py`, then `bash smoke_train.sh` for the two-step
-forward/backward validation. A long run should only be launched after recording
-the observed tokens/second and peak VRAM from this validation.
-
-## Usage
+The source checkpoint is randomly initialized and must be pretrained with full
+parameters. The current recipe uses FineWeb-Edu English and FineWeb 2 Chinese,
+offline-packed to 2048 tokens. Dataset revisions are recorded in
+[`sources.json`](sources.json).
 
 ```bash
-python prepare_smoke_data.py
-bash smoke_train.sh
+export MODUJO_BASE_MODEL=Alexhu1999/Modujo-9B-A1B
+python pretrain/data/prepare_smoke_data.py
+bash pretrain/scripts/smoke_train.sh
 
-python prepare_train_data.py
-python pack_documents.py
-bash train.sh
+python pretrain/data/prepare_train_data.py
+python pretrain/data/pack_documents.py
+bash pretrain/scripts/train.sh
 ```
 
-The tuned single-GPU configuration uses micro-batch 2 without gradient
-checkpointing and accumulates 64 micro-batches. Its effective batch is 128
-sequences (about 262k tokens per optimizer update at 2048 tokens). Micro-batch 2
-peaked at 72.78 GiB on a 96 GB RTX PRO 6000; micro-batch 3 exceeded 90 GiB and
-ran out of memory. The run saves every 10 optimizer steps.
+On one 96 GB RTX PRO 6000, the tuned recipe uses micro-batch 2, gradient
+accumulation 64, BF16, and no gradient checkpointing. Micro-batch 2 peaks at
+93.41 GiB with fused `grouped_mm` experts; micro-batch 3 runs out of memory.
+Grouped experts raise measured GPU utilization from about 27% to 98%.

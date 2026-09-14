@@ -11,8 +11,10 @@ The current data tranche is a 50/50 document mixture of FineWeb-Edu English and
 FineWeb 2 Chinese. Dataset revisions and source files are pinned in
 `../sources.json`. Generated data and checkpoints remain outside the repository.
 
-The RTX PRO 6000 profile uses fused `grouped_mm` experts. This raises measured
-GPU utilization from about 27% to 98% and cuts a 2x2048-token step from roughly
-27 seconds to 12.76 seconds. Peak allocated memory is 93.41 GiB.
+The RTX PRO 6000 profile uses fused `grouped_mm` experts. It cuts the measured
+2x2048-token micro-step from roughly 27 seconds to 12.76 seconds. During GA64,
+SM utilization remains around 24-27% with brief optimizer bursts near 98%, so
+further improvement requires a Megatron/kernel backend change. Peak allocated
+memory is 93.41 GiB.
 The launcher also enables expandable CUDA allocator segments to reduce
 fragmentation near this memory limit.
